@@ -1,0 +1,221 @@
+---
+# tasks file for web-application
+
+- name: install apache2, mariadb-server, mariadb-client and python3-pymysql
+  ansible.builtin.apt:
+    name: 
+      - apache2
+      - mariadb-server
+      - mariadb-client
+      - python3-pymysql # needed for database module
+    # update_cache: true
+  
+
+- name: start and enable mysql and snmpd
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop:
+    - mariadb
+    - apache2
+  
+- name: comment characher-set-server
+  ansible.builtin.replace:
+    path: '/etc/mysql/mariadb.conf.d/50-server.cnf'
+    regexp: 'character-set-server'
+    replace: '# character-set-server'
+
+- name: comment collation-server
+  ansible.builtin.replace:
+    path: '/etc/mysql/mariadb.conf.d/50-server.cnf'
+    regexp: 'collation-server'
+    replace: '# collation-server'
+
+- name: tune database server conf file
+  ansible.builtin.blockinfile:
+    path: '/etc/mysql/mariadb.conf.d/50-server.cnf'
+    insertafter: "mysqld]$"
+    block: |
+
+      collation-server = utf8mb4_unicode_ci
+      character-set-server=utf8mb4
+      max_heap_table_size = 128M
+      tmp_table_size = 64M
+      innodb_buffer_pool_instances=9
+      join_buffer_size = 10M
+      innodb_file_format = Barracuda
+      innodb_large_prefix = 1
+      innodb_buffer_pool_size = 1G
+      innodb_flush_log_at_timeout = 3
+      innodb_read_io_threads = 32
+      innodb_write_io_threads = 16
+      innodb_io_capacity = 5000
+      innodb_io_capacity_max = 10000
+      innodb_doublewrite = OFF
+  
+  notify: restart mariadb
+
+- name: install php and php extensions
+  ansible.builtin.apt:
+    name:
+      - libapache2-mod-php
+      - "php{{ php_version }}"
+      - "php{{ php_version }}-mysql"
+      - "php{{ php_version }}-xml"
+      - "php{{ php_version }}-gd"
+      - "php{{ php_version }}-snmp"
+      - "php{{ php_version }}-json"
+      - "php{{ php_version }}-intl"
+      - "php{{ php_version }}-mbstring"
+      - "php{{ php_version }}-ldap"
+      - "php{{ php_version }}-gmp"
+  
+- name: set timezone in cli file
+  ansible.builtin.lineinfile:
+    path: "/etc/php/{{ php_version }}/cli/php.ini"
+    regexp: ;date.timezone.*.
+    line: date.timezone = Europe/Brussels
+
+- name: set timezone in web file
+  ansible.builtin.lineinfile:
+    path: "/etc/php/{{ php_version }}/apache2/php.ini"
+    regexp: ;date.timezone.*.
+    line: date.timezone = Europe/Brussels
+
+- name: set memory_limit in web file
+  ansible.builtin.lineinfile:
+    path: "/etc/php/{{ php_version }}/apache2/php.ini"
+    regexp: ;memory_limit.*.
+    line: memory_limit = 500M
+
+- name: set memory_limit in web file
+  ansible.builtin.lineinfile:
+    path: "/etc/php/{{ php_version }}/apache2/php.ini"
+    regexp: ;max_execution_time.*.
+    line: max_execution_time = 60
+
+
+- name: install rrdtool and snmp
+  ansible.builtin.apt:
+    name:
+      - rrdtool
+      - snmp
+      - snmpd
+      - snmp-mibs-downloader
+      - libsnmp-dev
+  
+
+- name: create cacti database
+  ansible.builtin.command:
+    cmd: mariadb -bse "CREATE DATABASE cactidb;"
+  
+  register: rc
+  failed_when: rc.rc not in [0,1]
+
+- name: set cacti_user privileges
+  ansible.builtin.command:
+    cmd: mariadb -bse "GRANT ALL ON cactidb.* TO '{{ cacti_user }}'@'localhost' IDENTIFIED BY '{{ cacti_passwd }}';"
+  notify: flush privileges
+
+- name: give root a password
+  ansible.builtin.command:
+   cmd: mariadb -bse "GRANT ALL ON *.* TO 'root'@'localhost' IDENTIFIED BY '{{ root_passwd }}';"
+  notify: flush privileges
+
+- name: download and unpack the archive
+  ansible.builtin.unarchive:
+    src: "https://www.cacti.net/downloads/cacti-latest.tar.gz"
+    dest: /var/www/html/
+    owner: www-data
+    creates: /var/www/html/cacti
+    remote_src: true
+    list_files: true
+  register: files
+  # registered data
+  # {"changed": false, "dest": "/var/www/html/", "files": ["cacti-1.2.23/", "cacti-1.2.23/poller_automation.php", "cacti-1.2.23/snmpagent_mibcache.php", "cacti-1.2.23/data_debug.php"
+
+- name: move the files out of the cacti-version folder into cacti folder (future proof)
+  ansible.builtin.command:
+    cmd: "mv /var/www/html/{{ files.files[0] }} /var/www/html/cacti" 
+  when: files.changed == true 
+    # files.files[0] being the name of the downloaded archive (as first file in the archive)
+    # should make sure that cacti.sql is found, no matter the version 
+
+# cannot be made impotent, see https://docs.ansible.com/ansible/2.9_ja/modules/mysql_db_module.html (under notes "This module is not idempotent when state is import, and will import the dump file each time if run more than once.")
+- name: import default database to cacti
+  ansible.builtin.mysql_db:
+    login_user: "{{ cacti_user }}"
+    login_password: "{{ cacti_passwd }}" 
+    state: import
+    name: cactidb
+    target: /var/www/html/cacti/cacti.sql
+  ignore_errors: true
+
+# cannot be made impotent, see https://docs.ansible.com/ansible/2.9_ja/modules/mysql_db_module.html (under notes "This module is not idempotent when state is import, and will import the dump file each time if run more than once.")
+- name: import mysql timezone data
+  ansible.builtin.mysql_db:
+    login_user: "root"
+    login_password: "{{ root_passwd }}"
+    state: import
+    name: mysql
+    target: /usr/share/mysql/mysql_test_data_timezone.sql
+  ignore_errors: true
+
+- name: remove root mariadb password
+  ansible.builtin.command:
+   cmd: mysqladmin -u root -p"{{ root_passwd }}" password ''
+  notify: flush privileges
+
+
+- name: grant select privileges
+  ansible.builtin.command:
+    cmd: mariadb -bse "GRANT SELECT ON mysql.time_zone_name TO '{{ cacti_user }}'@'localhost';"
+  notify: flush privileges
+
+- name: change default cacti database
+  ansible.builtin.lineinfile:
+    path: /var/www/html/cacti/include/config.php
+    regexp: ^\$database_default*.=*.*.
+    line: $database_default  = 'cactidb';
+
+- name: change default cacti user
+  ansible.builtin.lineinfile:
+    path: /var/www/html/cacti/include/config.php
+    regexp: ^\$database_username*.=*.*.
+    line: "$database_username  = '{{ cacti_user }}';"
+
+- name: change default cacti password
+  ansible.builtin.lineinfile:
+    path: /var/www/html/cacti/include/config.php
+    regexp: ^\$database_password*.=*.*.
+    line: "$database_password  = '{{ cacti_passwd }}';"
+
+- name: change default cacti hostname
+  ansible.builtin.lineinfile:
+    path: /var/www/html/cacti/include/config.php
+    regexp: ^\$database_hostname*.=*.*.
+    line: "$database_hostname  = 'localhost';"
+
+- name: change default cacti type
+  ansible.builtin.lineinfile:
+    path: /var/www/html/cacti/include/config.php
+    regexp: ^\$database_type*.=*.*.
+    line: "$database_type  = 'mysql';"
+
+- name: creating cacti apache config
+  ansible.builtin.copy:
+    dest: /etc/apache2/sites-available/cacti.conf
+    content: |
+      Alias /cacti    /var/www/html/cacti
+      <Directory /var/www/html/cacti/>
+        <IfModule mod_authz_core.c>
+          Require all granted
+        </IfModule>
+      </Directory>
+
+- name: restart apache
+  ansible.builtin.systemd:
+    service: apache2
+    state: reloaded
+  

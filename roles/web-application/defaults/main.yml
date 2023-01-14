@@ -1,0 +1,6 @@
+---
+# defaults file for web-application
+cacti_user: admin
+cacti_passwd: admin
+root_passwd: Test123
+php_version: 7.4

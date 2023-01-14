@@ -1,0 +1,37 @@
+---
+- name: auto.master.d
+  file:
+    path: /etc/auto.master.d
+    state: directory
+    mode: 0755
+  tags:
+    - autofs
+    - auto.master.d
+
+- name: auto.master
+  template:
+    src: auto.master.map.j2
+    dest: '/etc/auto.master.d/{{ item.name }}.autofs'
+    mode: 0644
+  loop: '{{ autofs_maps }}'
+  when: autofs_maps is defined
+  notify: restart autofs
+  tags:
+    - autofs
+    - auto.master
+
+- name: volumes
+  template:
+    src: auto.map.j2
+    dest: '/etc/auto.{{ item.name }}'
+    owner: root
+    group: root
+    mode: 0644
+    backup: true
+  loop: '{{ autofs_maps }}'
+  when: autofs_mounts is defined
+  notify: reload autofs
+  ignore_errors: true
+  tags:
+    - autofs
+    - volumes

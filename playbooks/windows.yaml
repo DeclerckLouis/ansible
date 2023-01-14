@@ -1,0 +1,20 @@
+# setup for windows
+- name: set windows timezone
+  hosts: windows
+  gather_facts: false
+
+  tasks:
+  - name: Set timezone to 'Romance Standard Time' (GMT+01:00)
+    community.windows.win_timezone:
+      timezone: Romance Standard Time
+
+  - name: list all timezones using cmd.exe
+    ansible.builtin.win_command:
+      "tzutil.exe /l"
+  
+  - name: get host in PowerShell
+    ansible.builtin.win_shell:
+      "Get-host"
+
+# win_command -> cmd.exe
+# win_shell -> PowerShell

@@ -1,0 +1,36 @@
+---
+galaxy_info:
+  author: Mathias BOCQUET
+  description: Ansible role to install and configure autofs.
+  company: Sekoya.org (http://www.sekoya.org)
+
+  issue_tracker_url: https://git.sekoya.org/mb/autofs/issues
+
+  license: GPLv3
+
+  min_ansible_version: 1.2
+
+  platforms:
+    - name: Debian
+      versions:
+        - buster
+        - jessie
+        - sid
+        - stretch
+    - name: EL
+      versions:
+        - 5
+        - 6
+        - 7
+        - 8
+
+  galaxy_tags:
+    - autofs
+    - nfs
+    - cifs
+    - nas
+    - mount
+    - sysadmin
+
+dependencies: []
+...

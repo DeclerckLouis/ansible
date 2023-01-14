@@ -1,0 +1,12 @@
+---
+# how loops work
+
+- name: Show how loops work
+  tasks:
+    - name: copy
+      ansible.builtin.copy:
+        src: "/tmp/{{item}}"
+        dest: "/tmp/{{item}}"
+      loop:
+        - file1
+        - file2

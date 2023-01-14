@@ -1,0 +1,65 @@
+---
+# install a webserver
+
+# name of the first play
+- name: Install and a configure apache webserver
+  hosts: fedora_server
+  # Handlers can be called in later by tasks
+  handlers:
+      # all handlers must have names
+    - name: reload apache
+      ansible.builtin.systemd:
+        name: httpd.service
+        state: reloaded
+      become: true
+
+  tasks:
+    - name: ensure apache is installed
+      ansible.builtin.yum:
+        name: httpd # moet hier httpd zijn omdat dat de naam is voor fedora
+        state: present
+      become: true
+    - name: Write hostnamectl output to a file
+      ansible.builtin.shell:
+        cmd: echo '<pre>' /var/www/html/index.html && hostnamectl >> /var/www/html/index.html && echo '</pre>' /var/www/html/index.html
+      become: true
+
+    - name: write correct serveradmin email to default website
+      ansible.builtin.lineinfile:
+        path: /etc/apache2/sites-available/000-default.conf
+        search_string: ServerAdmin
+        line: ServerAdmin testadmin@snwb.howest.be
+      become: true
+      notify: reload apache
+
+
+#############################################
+# install a web server.
+- name: install and configure Apache web server
+  hosts: fedora_server
+  handlers:
+    - name: reload apache
+      ansible.builtin.systemd:
+        name: httpd.service
+        state: reloaded
+      become: true
+  tasks:
+    - name: Ensure Apache is installed.
+      ansible.builtin.apt:
+        name: httpd
+        state: present
+      become: true
+
+    - name: Write hostnamectl output to file
+      ansible.builtin.shell:
+        cmd: echo "<pre>" /var/www/html/index.html && hostnamectl >> /var/www/html/index.html && echo "<\pre>" /var/www/html/index.html
+      become: true
+
+    - name: write correct serveradmin email to default website
+      ansible.builtin.lineinfile:
+        path: /etc/apache2/sites-available/000-default.conf
+        regexp: '^(\s*)ServerAdmin(.*)'
+        line: '\1 ServerAdmin testadmin@snwb.test'
+        backrefs: true
+      become: true
+      notify: reload apache

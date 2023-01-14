@@ -1,0 +1,5 @@
+# {{ ansible_managed }} (role: {{ role_name }}, template: auto.map.j2)
+
+{% for item in autofs_mounts %}
+{{ item.mountname }} {{ item.options | default (autofs_nfs_options) }} {{ item.filer | default('') }}:{{ item.vol }}
+{% endfor %}

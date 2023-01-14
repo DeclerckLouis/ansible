@@ -1,0 +1,112 @@
+---
+# setup for localhost
+- name: setup timeserver for control node
+  hosts: localhost
+  gather_facts: false
+
+  handlers:
+    - name: restart chrony
+      ansible.builtin.systemd:
+        name: chrony
+        state: restarted
+      become: true
+
+  become: true
+  tasks:
+    - name: install chronyd
+      ansible.builtin.apt:
+        name: chrony
+        state: present
+
+    - name: disable pool
+      ansible.builtin.replace:
+        path: /etc/chrony/chrony.conf
+        regexp: "^pool"
+        replace: "# pool"
+
+    - name: Set timezone to EU/brussels
+      community.general.timezone:
+        name: Europe/Brussels
+
+    - name: change upstream server
+      ansible.builtin.lineinfile:
+        path: /etc/chrony/chrony.conf
+        insertafter: "# pool"
+        line: "pool 0.be.pool.ntp.org iburst"
+
+    - name: let managed nodes sync
+      ansible.builtin.lineinfile:
+        path: /etc/chrony/chrony.conf
+        line: "allow {{ item }}"
+      loop:
+        - 203.0.113.29
+        - 203.0.113.12
+      notify: restart chrony
+
+#setup for fedora
+- name: setup for fedora
+  hosts: fedora_server
+  handlers:
+    - name: restart chrony
+      ansible.builtin.systemd:
+        name: chrony
+        state: restarted
+      become: true
+  become: true
+
+  tasks:
+    - name: install chronyd / ensure chronyd is installed
+      ansible.builtin.dnf:
+        name: chrony
+        state: present
+
+    - name: disable pool
+      ansible.builtin.replace:
+        path: /etc/chrony.conf
+        regexp: "^pool"
+        replace: "# pool"
+
+    - name: set timeserver
+      ansible.builtin.lineinfile:
+        path: /etc/chrony.conf
+        insertafter: "^# pool"
+        line: "server 203.0.113.28"
+      notify: restart chrony
+
+    - name: Set timezone to EU/brussels
+      community.general.timezone:
+        name: Europe/Brussels
+
+#setup for ubuntu
+- name: setup for ubuntu
+  hosts: ubuntu
+  handlers:
+    - name: restart chrony
+      ansible.builtin.systemd:
+        name: chrony
+        state: restarted
+      become: true
+  become: true
+
+  tasks:
+    - name: install chronyd
+      ansible.builtin.apt:
+        name: chrony
+        state: present
+
+    - name: disable pool
+      ansible.builtin.replace:
+        path: /etc/chrony/chrony.conf
+        regexp: "^ pool"
+        replace: "# pool"
+
+    - name: set timeserver
+      ansible.builtin.lineinfile:
+        path: /etc/chrony/chrony.conf
+        insertafter: "^# pool 2."
+        line: "server 203.0.113.28"
+      notify: restart chrony
+
+    - name: Set timezone to EU/brussels
+      community.general.timezone:
+        name: Europe/Brussels

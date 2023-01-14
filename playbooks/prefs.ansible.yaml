@@ -1,0 +1,28 @@
+---
+
+- name: Prepare host for normal use
+  hosts: fedora_workstation
+  vars:
+    locales:
+      - en_DK.UTF-8
+      - en_US.UTF-8
+      - en_GB.UTF-8
+      - nl_BE.UTF-8
+
+  tasks:
+    ############# WERKT NIET OP FEDORA #######################
+    # - name: Configure locales
+    #   community.general.locale_gen:
+    #     name: "{{ item }}"
+    #     state: present
+    #   loop:
+    #     "{{ locales }}"
+    ###########################################################
+    - name: Get timezone.
+      ansible.builtin.command:
+        cmd: "/usr/bin/timedatectl"
+      register: timedatectl
+
+    - name: Show timezone.
+      ansible.builtin.debug:
+        msg: "{{ timedatectl }}"

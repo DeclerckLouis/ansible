@@ -1,0 +1,39 @@
+---
+# defaults file for autofs
+
+# Below examples should be placed in inventories variables
+
+# autofs_timeout
+# automatic umount timeout for maps
+# autofs_timeout: '600'
+
+# autofs_maps
+# define configured maps
+# No maps are configured unless this variable is defined
+# autofs_maps:
+# - name: 'misc'
+#   options: '--ghost --timeout=600'
+
+# default options for nfs
+# autofs_nfs_options: '-bg,intr,soft'
+
+# autofs_mounts example
+# No mounts are configured unless this variable is defined
+#
+# autofs_mounts:
+#   - mountname: 'backup'
+#     options: '{{ autofs_nfs_options }},rsize=1048576,wsize=1048576,nfsvers=3'
+#     filer: 'nas0'
+#     vol: '/srv/backup'
+#   - mountname: 'pics'
+#     options: '{{ autofs_nfs_options }},rsize=1048576,wsize=1048576,nfsvers=3'
+#     filer: 'nas1'
+#     vol: '/srv/pics'
+
+# autofs_timeoutstopsec
+#
+# autofs stop service timeout. This value will override the default stop
+# timeout. This is useful when volumes are unreachable during autofs
+# shutdown.
+#
+# autofs_timeoutstopsec: '10s'

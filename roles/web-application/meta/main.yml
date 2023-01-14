@@ -1,0 +1,10 @@
+galaxy_info:
+  author: Louis Declerck
+  description: A role used to install cacti onto a linux machine 
+  company: Howest SNWB
+  
+  license: GPL
+
+  min_ansible_version: "2.1"
+  
+

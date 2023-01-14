@@ -1,0 +1,9 @@
+- name: restart mariadb
+  ansible.builtin.systemd:
+    name: mariadb.service
+    state: restarted
+
+
+- name: flush privileges
+  ansible.builtin.command:
+    cmd: mariadb -bse "FLUSH PRIVILEGES;"

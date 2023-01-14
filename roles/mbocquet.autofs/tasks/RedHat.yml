@@ -1,0 +1,42 @@
+---
+- name: auto.master
+  lineinfile:
+    path: /etc/auto.master
+    regexp: '^.*/misc.*'
+    firstmatch: true
+    insertafter: '^.*/misc.*'
+    line: "/misc /etc/auto.misc --ghost --timeout={{ autofs_timeout }}"
+    state: present
+    backup: true
+  notify: restart autofs
+  ignore_errors: true
+  tags:
+    - autofs
+    - auto.master.d
+
+- name: service
+  service:
+    name: autofs
+    enabled: true
+    state: started
+  when:
+    - "'autofs' in services"
+    - ansible_service_mgr == "systemd"
+  tags:
+    - autofs
+    - service
+
+- name: volumes
+  template:
+    src: auto.map.j2
+    dest: /etc/auto.misc
+    owner: root
+    group: root
+    mode: 0644
+    backup: true
+  when: autofs_mounts is defined
+  notify: reload autofs
+  ignore_errors: true
+  tags:
+    - autofs
+    - volumes

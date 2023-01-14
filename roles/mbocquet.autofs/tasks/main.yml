@@ -1,0 +1,48 @@
+---
+- name: package
+  package:
+    name: autofs
+    update_cache: true
+  tags:
+    - autofs
+    - package
+
+- name: service_facts
+  service_facts:
+  tags:
+    - autofs
+    - facts
+
+- include_tasks: "{{ ansible_os_family }}.yml"
+  tags:
+    - autofs
+    - auto.master.d
+    - auto.master
+    - volumes
+
+- name: override
+  block:
+    - name: directory
+      file:
+        path: /etc/systemd/system/autofs.service.d
+        state: directory
+        mode: 0755
+      tags:
+        - directory
+
+    - name: template
+      template:
+        src: override.conf.j2
+        dest: /etc/systemd/system/autofs.service.d/override.conf
+        mode: 0644
+      notify: reload systemd
+      tags:
+        - template
+        - file
+  when:
+    - autofs_timeoutstopsec is defined
+    - ansible_service_mgr == 'systemd'
+  tags:
+    - autofs
+    - override
+    - systemd
