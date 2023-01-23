@@ -1,0 +1,124 @@
+---
+# 
+- name: examenopdracht Network Automation
+  hosts:
+    - node
+  tasks:
+  - name: add user johnny with fish shell, sudo privileges and password that doesn't reset on every run
+    ansible.builtin.user:
+      name: johnny
+      shell: /usr/bin/fish
+      groups:
+        - sudo
+      append: yes
+      comment: Johnny Megatron"
+      password: "{{ 'mypassword' | password_hash('sha512') }}"
+      update_password: on_create
+    #lijkt niet helemaal te werken, kan niet inloggen
+  
+
+  - name: install dependecies for bat
+    ansible.builtin.apt:
+      name:
+        - rustc
+        - cargo
+        - libc6-dev
+      state: present
+      install_recommends: yes
+      update_cache: yes
+      cache_valid_time: 3600
+
+
+  - name: install bat using cargo
+    ansible.builtin.shell:
+      cmd: cargo install bat
+    register: bat_install
+
+    
+  - name: add bat to path
+    ansible.builtin.shell:
+      cmd: export PATH=$PATH:~/.cargo/bin
+  
+
+  - name: replace cat command with bat in bashrc
+    ansible.builtin.lineinfile:
+      path: ~.bashrc
+      line: 'alias cat="bat"'
+      state: present
+      create: yes
+
+  - name: retrieve joke from  https://jokeapi.dev/
+    ansible.builtin.uri:
+      url: https://v2.jokeapi.dev/joke/Any?blacklistFlags=racist&type=twopart
+      method: GET
+      return_content: yes
+      status_code: 200
+    register: joke
+
+  - name: if it doesn't exist, create dir /srv/jokes
+    ansible.builtin.file:
+      path: /srv/fun
+      state: directory
+      mode: 0755
+      owner: root
+      group: root
+
+  - name: "add joke to /srv/fun/jokes{{ id }}"
+    ansible.builtin.copy:
+      content: "{{ joke.json.setup }} {{ joke.json.delivery }}"
+      dest: "/srv/fun/jokes{{ joke.json.id }}"
+      owner: root
+      group: root
+    when: joke.json.type == "twopart"
+
+  # - name: install dependencies for exa
+  #   ansible.builtin.apt:
+  #     name: 
+  #       - rustc
+  #       - cargo
+  #       - cmake
+  #       - libgit2-dev
+  #     state: present
+  #     install_recommends: yes
+  #     update_cache: yes
+  #     cache_valid_time: 3600
+
+# Doesn't work
+#####################################################################################
+  # - name: rustup default nightly (workaround to failing compiling exa)
+  #   ansible.builtin.shell:
+  #     cmd: rustup default nightly
+  #   register: rustup_default
+#####################################################################################
+
+
+# Fails consistently
+#####################################################################################
+  # - name: install exa using cargo
+  #   ansible.builtin.shell:
+  #     cmd: cargo install exa --no-default-features
+  #   register: exa_install
+    #fails, seems to be a rust  
+    # see https://github.com/ogham/exa/issues/1040
+    # https://github.com/ogham/exa/issues/1068
+#####################################################################################
+
+  # - name: add exa to path
+  #   ansible.builtin.lineinfile:
+  #     path: /home/root/.bashrc
+  #     regexp: 'export PATH=$PATH:~/.cargo/bin'
+  #     line: 'export PATH=$PATH:~/.cargo/bin'
+  #     state: present
+  #     create: yes
+
+  
+  # - name: replace ls command with exa in bashrc
+  #   ansible.builtin.lineinfile:
+  #     path: ~.bashrc
+  #     regexp: 'alias ls='
+  #     line: 'alias ls="exa"'
+  #     state: present
+  #     create: yes
+    
+      
+    
