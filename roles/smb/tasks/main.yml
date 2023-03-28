@@ -1,5 +1,6 @@
 ---
 # Start of the playbook / task
+
 - name: install samba
   ansible.builtin.package:
     name: samba
@@ -34,3 +35,4 @@
     dest: /etc/samba/smb.conf
     mode: 0644
     backup: yes
+  notify: restart samba
