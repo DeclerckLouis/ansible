@@ -5,16 +5,32 @@
     name: samba
     state: present
 
-- name: crate a sambausrs group
+#create a sambausers group, all users in this group will have read and write permissions in the share later
+- name: create a sambausrs group 
   ansible.builtin.group:
-    name: sambausers
+    name: "{{ smb_group }}"
     state: present
 
-- name: create a samba share
+#create a samba user
+- name: create a samba user
+  ansible.builtin.user:
+    name: "{{ smb_user }}"
+    password: "{{ smb_password }}"
+    groups: "{{ smb_group }}, sudo"
+    shell: /bin/bash
+    state: present
+
+- name: create a samba share directory
+  ansible.builtin.file:
+    path: "{{ smb_path }}"
+    state: directory
+    owner: "{{ smb_user }}"
+    group: "{{ smb_group }}"
+    mode: 0770
+  
+- name: create a samba share in the config file
   ansible.builtin.template:
-    src: samba_share.j2
+    src: smb.conf.j2
     dest: /etc/samba/smb.conf
-    owner: root
-    group: sambausers
-    mode: 0664
-  notify: restart samba
+    mode: 0644
+    backup: yes
