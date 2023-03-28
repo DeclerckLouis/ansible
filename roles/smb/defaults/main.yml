@@ -1,0 +1,13 @@
+---
+# defaults file for smb
+
+#The group that will be created if there is no other group name defined.
+#users in this group will have read and write rights in the shared folder
+smb_group: smbusers
+
+#These are to be changed when used in production.
+smb_user: sambauser
+smb_password: Test123
+smb_share: share
+smb_path: /home/sambauser/share
+smb_hosts_allow: localhost

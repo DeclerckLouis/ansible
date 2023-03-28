@@ -1,0 +1,20 @@
+---
+# Start of the playbook / task
+- name: install samba
+  ansible.builtin.package:
+    name: samba
+    state: present
+
+- name: crate a sambausrs group
+  ansible.builtin.group:
+    name: sambausers
+    state: present
+
+- name: create a samba share
+  ansible.builtin.template:
+    src: samba_share.j2
+    dest: /etc/samba/smb.conf
+    owner: root
+    group: sambausers
+    mode: 0664
+  notify: restart samba

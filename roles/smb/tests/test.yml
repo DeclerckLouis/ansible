@@ -1,0 +1,6 @@
+---
+- name: Install and configure SMB on a raspberry pi
+  hosts: localhost
+  remote_user: root
+  roles:
+    - ~/ansible/roles/smb
