@@ -15,7 +15,7 @@
 - name: create a samba user
   ansible.builtin.user:
     name: "{{ smb_user }}"
-    password: "{{ smb_password }}"
+    password: "{{ smb_password | password_hash('sha512')}}"
     groups: "{{ smb_group }}, sudo"
     shell: /bin/bash
     state: present
