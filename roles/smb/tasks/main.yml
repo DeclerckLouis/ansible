@@ -1,18 +1,19 @@
 ---
 # Start of the playbook / task
 
+#installing samba
 - name: install samba
   ansible.builtin.package:
     name: samba
     state: present
 
-#create a sambausers group, all users in this group will have read and write permissions in the share later
+#Create a sambausers group, all users in this group will have read and write permissions in the share later
 - name: create a sambausrs group 
   ansible.builtin.group:
     name: "{{ smb_group }}"
     state: present
 
-#create a samba user
+#Create a samba user, the share will be owned by this user
 - name: create a samba user
   ansible.builtin.user:
     name: "{{ smb_user }}"
@@ -21,14 +22,18 @@
     shell: /bin/bash
     state: present
 
+#The share location is default at /home/sambauser/share, this can be changed by changing the smb_path variable
 - name: create a samba share directory
   ansible.builtin.file:
     path: "{{ smb_path }}"
     state: directory
-    owner: "{{ smb_user }}"
+    # owner: "{{ smb_user }}"
+    owner: "louis"
     group: "{{ smb_group }}"
     mode: 0770
-  
+
+#Using the template module, the smb.conf file is created from the smb.conf.j2 file
+#Afterwards, the samba service is restarted
 - name: create a samba share in the config file
   ansible.builtin.template:
     src: smb.conf.j2

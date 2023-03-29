@@ -3,6 +3,13 @@
 An [Ansible](https://www.ansible.com) role to install/configure the [SMB](https://www.samba.org/) on a [Raspberry Pi](https://www.raspberrypi.org/).
   
 Tested on [Debian GNU/Linux 11 (bullseye)](https://www.raspberrypi.com/software/)  
+  
+## How to use this role  
+1. Ensure ssh connection to the pi.
+2. Change the `smb_password` variable in `test.yml` to something else.
+3. Change other variables if needed or desired.
+4. Run `ansible-playbook test.yml`.
+5. Enjoy your new samba server.
 
 ## Requirements
 
@@ -32,6 +39,9 @@ The `smb_share`, `smb_path` and `smb_hosts_allow` are used in the `smb.conf` fil
 Instead of editing this file line per line, I added a template which gets loaded in.  
 The template is the default configuration file, but with the new share added at the end.  
   
+**warning:** The default configuration file is overwritten, so if you have any custom settings, make sure to add them to the template.  
+  
+*note:*
 *All default variables can be overridden in the `vars/main.yml` file.*
 
 
