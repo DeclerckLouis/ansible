@@ -1,0 +1,7 @@
+---
+- name: Install and configure SMB on a raspberry pi
+  hosts: rotten
+  remote_user: louis
+  roles:
+    - ~/Desktop/ansible/roles/smb
+  become: true
