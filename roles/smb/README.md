@@ -22,8 +22,8 @@ Tested on [Debian GNU/Linux 11 (bullseye)](https://www.raspberrypi.com/software/
   - samba (139 & 445)
   
 ## Role default variables
-- `smb_users`: users to create (default: `sambauser`)  
-- `smb_password`: password for the user (default `Test123` (change this!))
+- `smb_users`: users to create (default: `sambauser`, check variables file)  
+- `smb_password`: password for the user (default `Test123` (change this in variables!))
 - `smb_group`: group for the user (default: `sambagroup`)
 - `smb_share`: name of the share (default: `share`)
 - `smb_path`: path to the share (default: `/home/sambauser/share`)
@@ -42,8 +42,9 @@ The template is the default configuration file, but with the new share added at 
   
 **warning:** The default configuration file is overwritten, so if you have any custom settings, make sure to add them to the template.  
   
-*note:*
+***notes:***
 *All default variables can be overridden in the `vars/main.yml` file.*
+*This playbook will override any previous samba configurations, if you want to keep them, add them to the template*
 
 
 ## Example setup and playbook
@@ -66,6 +67,7 @@ Assuming i have a Windows 10 machine (with user "louis") in the same network as 
 ```  
 3. On the Windows 10 machine, open the file explorer, "This PC" and click on "Map network drive".
 4. In the "Folder" field, enter `\\hostnameofyourpi\share` and click "Finish".
+5. Enter the username and password of the user you created in the vars/main.yml file.
 
 
 ## License
