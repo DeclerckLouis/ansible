@@ -44,8 +44,7 @@
     state: directory
     owner: "{{ smb_user }}" #since "sambauser" doesn't seem to work, I added the smb_user variable, which is "louis"
     group: "{{ smb_group }}"
-    mode: 0777
-    # mode: 0770
+    mode: 0770
 
 #Using the template module, the smb.conf file is created from the smb.conf.j2 file
 #Afterwards, the samba service is restarted
