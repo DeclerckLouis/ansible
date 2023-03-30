@@ -12,4 +12,4 @@ smb_password: Test123
 #Options for the share itself
 smb_share: share
 smb_path: /home/sambauser/share
-# smb_hosts_allow: localhost #this doesn't seem to work
+smb_hosts_allow: localhost #this doesn't seem to work

@@ -57,6 +57,9 @@
 # Append syslog@1 if you want important messages to be sent to syslog too.
    logging = file
 
+#do more logging
+   log level = 2
+
 # Do something sensible when Samba crashes: mail the admin a backtrace
    panic action = /usr/share/samba/panic-action %d
 
@@ -211,3 +214,5 @@
   directory mask = 0770
 #  host allow = {{ smb_hosts_allow }} #this one seems to mess up the playbook
   public = no
+
+  

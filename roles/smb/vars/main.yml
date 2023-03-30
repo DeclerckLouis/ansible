@@ -1,4 +1,30 @@
 ---
 # vars file for smb
 # smb_hosts_allow: 192.168.0. 192.168.5.
-smb_user: louis
+
+
+#################################################################################################################################
+###   THESE VARIABLES ARE FOR TESTING PURPOSES, THEY ARE NOT TE BE USED IN A PRODUCTION ENVIRONMENT UNDER ANY CIRCUMSTANCES   ###
+###                          THEY ARE TO BE REMOVED AFTER TESTING IS DONE AND THE VARIABLES ARE SET.                          ###       
+#################################################################################################################################
+
+users:
+  - smb_user: sambauser
+    smb_password: Test123
+    smb_group: "{{  smb_group  }}"
+
+  - smb_user: louis #my host user
+    smb_password: Test123
+    smb_group: "{{  smb_group  }}"
+
+  - smb_user: mano
+    smb_password: Test123
+    smb_group: "{{  smb_group  }}"
+    
+  - smb_user: ian
+    smb_password: Test123
+    smb_group: "{{  smb_group  }}"
+
+  - smb_user: arno
+    smb_password: Test123
+    smb_group: "{{  smb_group  }}"
