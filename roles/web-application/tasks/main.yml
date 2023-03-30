@@ -173,6 +173,9 @@
     cmd: mariadb -bse "GRANT SELECT ON mysql.time_zone_name TO '{{ cacti_user }}'@'localhost';"
   notify: flush privileges
 
+
+###############################################################
+# This should have been done with a template, i didn't think about it
 - name: change default cacti database
   ansible.builtin.lineinfile:
     path: /var/www/html/cacti/include/config.php
