@@ -4,6 +4,12 @@
   hosts:
     - node
   tasks:
+  
+  - name: install fish shell
+    ansible.builtin.package:
+      name: fish
+      state: present
+  
   - name: add user johnny with fish shell, sudo privileges and password that doesn't reset on every run
     ansible.builtin.user:
       name: johnny
