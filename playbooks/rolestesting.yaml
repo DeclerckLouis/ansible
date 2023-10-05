@@ -1,5 +1,5 @@
----
+--- #This is a playbook to use when too lazy to use the role/test/test.yml file
 - hosts: ubuntus
-  roles:
+  roles: #CHANGEME
     # - /home/kali/ansible/web-application-DeclerckLouis/web-application
   become: true
