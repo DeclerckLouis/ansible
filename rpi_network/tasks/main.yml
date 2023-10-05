@@ -1,0 +1,67 @@
+---
+# tasks file for rpi_network
+
+- name: Set static IP with template
+  template:
+    src: dhcpcd.j2
+    dest: /etc/dhcpcd.conf
+    backup: true
+  # Do not restart the dhcpcd service because we will lose connection
+  #notify: restart dhcpcd.service
+  become: true
+
+
+- name: Apt update and upgrade
+  apt:
+    update_cache: yes
+    upgrade: yes
+    cache_valid_time: 3600
+  become: true
+
+
+- name: Install packages (defined in vars)
+  package:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ packages }}"
+  become: true
+
+- name: enable fail2ban
+  service:
+    name: fail2ban
+    enabled: yes
+    state: started
+  become: true
+
+
+- name: Add additional fail2ban jails
+  copy:
+    src: "{{ item }}"
+    dest: /etc/fail2ban/jail.d/
+  loop:
+    - fail2ban_default.conf
+    - fail2ban_sshd.conf
+    - fail2ban_recidive.conf
+  notify: restart fail2ban
+  become: true
+
+
+- name: show fail2ban status on ssh login
+  copy:
+    src: 50-fail2ban-status
+    dest: /etc/update-motd.d/
+    mode: 0755
+  become: true
+
+- name: remove uname and motd files
+  file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/motd
+    - /etc/update-motd.d/10-uname
+  become: true
+  notify: restart ssh
+
+
+

@@ -1,0 +1,21 @@
+---
+# handlers file for rpi_network
+- name: restart dhcpcd.service
+  service:
+    name: dhcpcd.service
+    state: restarted
+  become: true
+
+
+- name: restart fail2ban
+  service:
+    name: fail2ban
+    state: restarted
+  become: true
+
+
+- name: restart ssh
+  service:
+    name: ssh
+    state: restarted
+  become: true
