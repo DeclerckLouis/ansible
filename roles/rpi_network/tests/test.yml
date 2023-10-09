@@ -1,5 +1,6 @@
 ---
-- hosts: deb
+- name: Test play
+  hosts: deb
   remote_user: undefined
   roles:
     - rpi_network

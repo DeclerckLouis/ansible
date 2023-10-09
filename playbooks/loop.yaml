@@ -2,6 +2,7 @@
 # how loops work
 
 - name: Show how loops work
+  hosts: deb
   tasks:
     - name: copy
       ansible.builtin.copy:

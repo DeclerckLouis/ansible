@@ -1,6 +1,6 @@
 ---
 # 
-- name: examenopdracht Network Automation
+- name: Examenopdracht Network Automation
   hosts:
     - node
   tasks:

@@ -1,21 +1,21 @@
 ---
 # handlers file for rpi_network
-- name: restart dhcpcd.service
-  service:
+- name: Restart dhcpcd.service
+  ansible.builtin.service:
     name: dhcpcd.service
     state: restarted
   become: true
 
 
-- name: restart fail2ban
-  service:
+- name: Restart fail2ban
+  ansible.builtin.service:
     name: fail2ban
     state: restarted
   become: true
 
 
-- name: restart ssh
-  service:
+- name: Restart ssh
+  ansible.builtin.service:
     name: ssh
     state: restarted
   become: true

@@ -7,5 +7,3 @@ host_ip: 192.168.0.250
 subnet_mask: /24
 router_ip: 192.168.0.1
 nameservers_ip: "192.168.0.1 8.8.8.8"
-
-
