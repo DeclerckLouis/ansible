@@ -1,0 +1,10 @@
+# setup for domaincontroller, in order to speed up assignments (NOT FOR PRODUCTION)
+
+- name: Windows DC setup
+  hosts: winserv
+  gather_facts: true
+  handlers:
+  tasks:  
+  - name: get host in PowerShell
+    ansible.builtin.win_shell:
+      "Get-host"
