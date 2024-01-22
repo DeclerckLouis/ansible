@@ -1,0 +1,30 @@
+---
+# setup the localhost with my debian preferences
+
+- name: Debian Workstation-Server Setup
+  hosts: localhost
+  become_method: sudo
+  vars:
+    motd_value: "{{ lookup('ansible.builtin.file', '/etc/motd') }}"
+
+  tasks:
+    - name: MOTD test
+      debug:
+        msg: "{{ motd_value }}"
+      become: False
+
+    - name: Create random but idempotent password
+      ansible.builtin.set_fact:
+        test_password: "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) }}"
+    
+    - name: Set the password for sudo
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        password: "{{ test_password }}"
+        update_password: on_create
+        state: present
+        shell: /bin/bash
+        groups: sudo
+      become: True
+
+    - name: Install packages
