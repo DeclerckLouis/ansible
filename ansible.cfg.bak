@@ -1,0 +1,4 @@
+[defaults]
+inventory=inventories
+roles_path=roles
+

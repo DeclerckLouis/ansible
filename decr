@@ -1,0 +1,2 @@
+#!/bin/bash
+ansible-vault decrypt inventories/*/*/vault.yaml

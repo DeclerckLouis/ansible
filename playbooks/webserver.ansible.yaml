@@ -19,6 +19,7 @@
         name: httpd # moet hier httpd zijn omdat dat de naam is voor fedora
         state: present
       become: true
+
     - name: Write hostnamectl output to a file
       ansible.builtin.shell:
         cmd: echo '<pre>' /var/www/html/index.html && hostnamectl >> /var/www/html/index.html && echo '</pre>' /var/www/html/index.html
