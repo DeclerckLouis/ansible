@@ -1,0 +1,31 @@
+---
+# Simple ping to inventory hosts
+
+- name: Quick Node setup
+  hosts: lab:k8s_nodes
+  become_method: sudo
+  gather_facts: False
+  vars:
+    motd_value: "{{ lookup('ansible.builtin.file', '/etc/motd') }}"
+
+  tasks:
+    - name: Set hostname fact
+      ansible.builtin.set_fact:
+        hostname: "{{ inventory_hostname }}"
+      become: False
+
+    - name: Change hostname
+      ansible.builtin.hostname:
+        name: "{{ hostname }}"
+      become: True
+
+    - name: Set MOTD banner to "hello from {{ hostname }}"
+      ansible.builtin.copy:
+        content: "hello from {{ hostname }}!"
+        dest: /etc/motd
+      become: True
+
+    - name: MOTD printout
+      ansible.builtin.debug:
+        msg: "{{ motd_value }}"
+      become: False

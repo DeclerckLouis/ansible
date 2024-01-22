@@ -2,17 +2,12 @@
 # setup the localhost with my debian preferences
 
 - name: Debian Workstation-Server Setup
-  hosts: localhost
+  hosts: deb-node
   become_method: sudo
   vars:
     motd_value: "{{ lookup('ansible.builtin.file', '/etc/motd') }}"
 
   tasks:
-    - name: MOTD test
-      debug:
-        msg: "{{ motd_value }}"
-      become: False
-
     - name: Create random but idempotent password
       ansible.builtin.set_fact:
         test_password: "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) }}"
@@ -28,3 +23,15 @@
       become: True
 
     - name: Install packages
+      ansible.builtin.apt:
+        name:
+          - fail2ban
+          - git
+          - htop
+          - ansible
+          - ansible-lint
+          - python3-pip
+          - python3-venv
+          - python3-dev
+        state: latest
+      become: True
