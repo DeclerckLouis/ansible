@@ -1,0 +1,14 @@
+---
+- name: Quick Node setup
+  hosts: lab:k8s_nodes
+  become_method: sudo
+  gather_facts: False
+  vars:
+    motd_value: "{{ lookup('ansible.builtin.file', '/etc/motd') }}"
+
+  tasks:
+  - name: set hostname from the inventory file
+    ansible.builtin.hostname:
+      name: "{{ inventory_hostname }}"
+    register: set_hostname
+  

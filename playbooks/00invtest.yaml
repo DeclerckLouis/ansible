@@ -29,3 +29,19 @@
       ansible.builtin.debug:
         msg: "{{ motd_value }}"
       become: False
+
+# create a random password per host
+    - name: Create a random password for the host
+      ansible.builtin.set_fact:
+      password: "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) }}"
+    
+
+# create a ansible user and set a random password
+    - name: create an ansible user with the password and make him part of the sudo group
+      ansible.builtin.user:
+        name: ansible
+        state: present
+        password: "{{ _password_ }}"
+        groups: sudo
+        append: true
+    
