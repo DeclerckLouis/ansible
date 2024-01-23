@@ -1,2 +1,97 @@
 ---
-# tasks file for linux-security
+### tasks file for linux-security
+# Setting Facts
+# Set group var for debian and ubuntu
+- name: Set groups for the host (debian / ubuntu)
+  ansible.builtin.set_fact:
+    groups: "{{ groups | default([]) + ['admin'] }}"
+  when: ansible_os_family == "Debian" or ansible_os_family == "Ubuntu"
+  become: True
+
+# Set group var for fedora
+- name: Set groups for the host (fedora)
+  ansible.builtin.set_fact:
+    groups: "{{ groups | default([]) + ['wheel'] }}"
+  when: ansible_os_family == "RedHat"
+  become: True
+
+# create a random password per host
+- name: Create a random password for the host
+  ansible.builtin.set_fact:
+    user_password: "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) }}"
+
+## Installing packages
+- name: Install dependencies for debian and ubuntu
+  ansible.builtin.apt:
+    name: "{{ packages }}"
+    state: present
+  when: ansible_os_family == "Debian" or ansible_os_family == "Ubuntu"
+  become: True
+
+- name: Install dependencies for fedora
+  ansible.builtin.yum:
+    name: "{{ packages }}"
+    state: present
+  when: ansible_os_family == "RedHat"
+  become: True
+
+## Configuring services
+- name: Fail2ban configuration using template
+  ansible.builtin.template:
+    src: templates/jails.d
+    dest: /etc/fail2ban/jail.d/"{{ item | basename | regex_replace('\.j2$', '') }}"
+    owner: root
+    group: root
+    mode: 0600
+  with_fileglob:
+    - ../templates/jails.d/*.j2
+  notify:
+    - Fedora restart fail2ban
+  become: True
+
+## Configuring sshd
+- name: Generate SSH keys for the host
+  ansible.builtin.openssh_keypair:
+    path: /etc/ssh/ssh_host_ed25519_key
+    type: ed25519
+    size: 4096
+    state: present
+  notify:
+    - Restart sshd
+  become: True
+
+- name: Configure sshd
+  ansible.builtin.template:
+    src: templates/sshd_config.j2
+    dest: /etc/ssh/sshd_config.d/ansible.conf
+    owner: root
+    group: root
+    mode: 0600
+  notify:
+    - Restart sshd
+  become: True
+
+- name: Create admin group
+  ansible.builtin.group:
+    name: admin
+    state: present
+  become: True
+
+- name: Create an administrative user
+  ansible.builtin.user:
+    append: True
+    name: louisadm
+    create_home: True
+    generate_ssh_key: True
+    ssh_key_bits: 4096
+    ssh_key_file: .ssh/id_rsa
+    update_password: on_create
+    password: "{{ user_password | password_hash('sha512') }}"
+    groups: "{{ groups }}"
+    shell: /bin/bash
+    state: present
+  notify:
+    - Restart sshd
+  become: True
+
+

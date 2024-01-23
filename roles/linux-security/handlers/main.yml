@@ -1,2 +1,20 @@
 ---
 # handlers file for linux-security
+
+- name: Restart sshd
+  service:
+    name: sshd
+    state: restarted
+  become: True
+
+- name: Restart fail2ban
+  service:
+    name: fail2ban
+    state: restarted
+  become: True
+
+- name: Restart rsyslog
+  service:
+    name: rsyslog
+    state: restarted
+  become: True

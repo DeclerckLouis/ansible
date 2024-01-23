@@ -1,2 +1,8 @@
 ---
 # defaults file for linux-security
+packages:
+  - fail2ban
+  - rsyslog
+  - iproute2
+  - openssh-server
+  - git

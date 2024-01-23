@@ -1,7 +1,7 @@
 Linux Security
 =========
 
-A brief description of the role goes here.
+A role that implements a set of security practices for linux systems.
 
 Requirements
 ------------
