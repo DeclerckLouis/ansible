@@ -1,14 +1,46 @@
 ---
 - name: Quick Node setup
-  hosts: lab:k8s_nodes
+  hosts: localhost
   become_method: sudo
   gather_facts: False
   vars:
     motd_value: "{{ lookup('ansible.builtin.file', '/etc/motd') }}"
 
   tasks:
-  - name: set hostname from the inventory file
-    ansible.builtin.hostname:
-      name: "{{ inventory_hostname }}"
-    register: set_hostname
+    - name: Let users from admin group run sudo without password
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: ^%admin
+        line: '%admin ALL=(ALL) NOPASSWD: ALL'
+        validate: /usr/sbin/visudo -cf %s
+      become: True
+
+    - name: Create a random password for the host
+      ansible.builtin.set_fact:
+        user_password: "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) }}"
+      no_log: True
+
+    - name: Create admin group
+      ansible.builtin.group:
+        name: admin
+        state: present
+      become: True
+
+    - name: Create an administrative user
+      ansible.builtin.user:
+        append: True
+        name: louisadm
+        create_home: True
+        generate_ssh_key: True
+        ssh_key_bits: 4096
+        ssh_key_file: .ssh/id_rsa
+        update_password: on_create
+        password: "{{ user_password | password_hash('sha512') }}"
+        groups: sudo, netdev, admin
+        shell: /bin/bash
+        state: present
+      notify:
+        - Restart sshd
+      become: True
   
