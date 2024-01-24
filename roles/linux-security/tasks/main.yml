@@ -23,15 +23,17 @@
 ## Installing packages
 - name: Install dependencies for debian and ubuntu
   ansible.builtin.apt:
-    name: "{{ packages }}"
+    name: "{{ item }}"
     state: present
+  loop: "{{ packages }}"
   when: ansible_os_family == "Debian" or ansible_os_family == "Ubuntu"
   become: True
 
 - name: Install dependencies for fedora
-  ansible.builtin.yum:
-    name: "{{ packages }}"
+  ansible.builtin.dnf:
+    name: "{{ item }}"
     state: present
+  loop: "{{ packages }}"
   when: ansible_os_family == "RedHat"
   become: True
 
@@ -56,8 +58,6 @@
     type: ed25519
     size: 4096
     state: present
-  notify:
-    - Restart sshd
   become: True
 
 - name: Configure sshd
@@ -90,8 +90,28 @@
     groups: "{{ groups }}"
     shell: /bin/bash
     state: present
-  notify:
-    - Restart sshd
   become: True
 
+- name: Allow admin group to use sudo
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers.d/admin
+    line: "%admin ALL=(ALL) ALL"
+    state: present
+    create: True
+    validate: 'visudo -cf %s'
+  become: True
 
+- name: Remove root password
+  ansible.builtin.user:
+    name: root
+    password_lock: True
+  become: True
+
+- name: Add keys to authorized_keys
+  ansible.builtin.copy:
+    content: "{{ auhtorized_keys }}"
+    dest: /home/louisadm/.ssh/authorized_keys
+    owner: louisadm
+    group: louisadm
+    mode: 0600
+  become: True
