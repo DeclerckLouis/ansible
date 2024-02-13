@@ -2,7 +2,7 @@
 - name: Quick Node setup
   hosts: localhost
   become_method: sudo
-  gather_facts: False
+  gather_facts: false
   vars:
     motd_value: "{{ lookup('ansible.builtin.file', '/etc/motd') }}"
 
@@ -14,33 +14,62 @@
         regexp: ^%admin
         line: '%admin ALL=(ALL) NOPASSWD: ALL'
         validate: /usr/sbin/visudo -cf %s
-      become: True
+      become: true
 
     - name: Create a random password for the host
       ansible.builtin.set_fact:
         user_password: "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) }}"
-      no_log: True
+      no_log: true
 
-    - name: Create admin group
-      ansible.builtin.group:
-        name: admin
-        state: present
-      become: True
+    # - name: Create admin group
+    #   ansible.builtin.group:
+    #     name: admin
+    #     state: present
+    #   become: true
 
-    - name: Create an administrative user
-      ansible.builtin.user:
-        append: True
-        name: louisadm
-        create_home: True
-        generate_ssh_key: True
-        ssh_key_bits: 4096
-        ssh_key_file: .ssh/id_rsa
-        update_password: on_create
-        password: "{{ user_password | password_hash('sha512') }}"
-        groups: sudo, netdev, admin
-        shell: /bin/bash
+    # - name: Create an administrative user
+    #   ansible.builtin.user:
+    #     append: true
+    #     name: louisadm
+    #     create_home: true
+    #     generate_ssh_key: true
+    #     ssh_key_bits: 4096
+    #     ssh_key_file: .ssh/id_rsa
+    #     update_password: on_create
+    #     password: "{{ user_password | password_hash('sha512') }}"
+    #     groups: sudo, netdev, admin
+    #     shell: /bin/bash
+    #     state: present
+    #   notify:
+    #     - Restart sshd
+    #   become: true 
+
+    - name: Create a motd file
+      ansible.builtin.copy:
+        content: |
+          Welcome to {{ ansible_fqdn }}!
+          This host is managed by Ansible.
+          The current MOTD is:
+          {{ motd_value }}
+        dest: /etc/motd
+      become: true
+
+    - name: install fail2ban
+      ansible.builtin.package:
+        name: fail2ban
         state: present
+      become: true
+    
+    ## Configuring services
+    - name: Fail2ban configuration using template
+      ansible.builtin.template:
+        src: templates/jails.d
+        dest: /etc/fail2ban/jail.d/"{{ item | basename | regex_replace('\.j2$', '') }}"
+        owner: root
+        group: root
+        mode: 0600
+      with_fileglob:
+        - ../templates/jails.d/*.j2
       notify:
-        - Restart sshd
-      become: True
-  
+        - Fedora restart fail2ban
+      become: true

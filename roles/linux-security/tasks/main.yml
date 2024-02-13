@@ -1,117 +1,131 @@
 ---
+
+- name: Setup motd scripts
+  ansible.builtin.copy:
+    src: "files/motd_scripts{{ item }}"
+    dest: "/etc/update-motd.d/{{ item | basename }}"
+    owner: root
+    group: root
+    mode: "0755"
+  loop: "{{ lookup('fileglob', 'files/motd_scripts/*') }}"
+  become: true
+
+
 ### tasks file for linux-security
 # Setting Facts
 # Set group var for debian and ubuntu
-- name: Set groups for the host (debian / ubuntu)
-  ansible.builtin.set_fact:
-    groups: "{{ groups | default([]) + ['admin'] }}"
-  when: ansible_os_family == "Debian" or ansible_os_family == "Ubuntu"
-  become: True
+# - name: Set groups for the host (debian / ubuntu)
+#   ansible.builtin.set_fact:
+#     groups: "{{ groups | default([]) + ['admin'] }}"
+#   when: ansible_os_family == "Debian" or ansible_os_family == "Ubuntu"
+#   become: true
 
-# Set group var for fedora
-- name: Set groups for the host (fedora)
-  ansible.builtin.set_fact:
-    groups: "{{ groups | default([]) + ['wheel'] }}"
-  when: ansible_os_family == "RedHat"
-  become: True
+# # Set group var for fedora
+# - name: Set groups for the host (fedora)
+#   ansible.builtin.set_fact:
+#     groups: "{{ groups | default([]) + ['wheel'] }}"
+#   when: ansible_os_family == "RedHat"
+#   become: true
 
 # create a random password per host
-- name: Create a random password for the host
-  ansible.builtin.set_fact:
-    user_password: "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) }}"
+# - name: Create a random password for the host
+#   ansible.builtin.set_fact:
+#     user_password: "{{ lookup('ansible.builtin.password', '/dev/null', seed=inventory_hostname) }}"
 
-## Installing packages
-- name: Install dependencies for debian and ubuntu
-  ansible.builtin.apt:
-    name: "{{ item }}"
-    state: present
-  loop: "{{ packages }}"
-  when: ansible_os_family == "Debian" or ansible_os_family == "Ubuntu"
-  become: True
+# ## Installing packages
+# - name: Install dependencies for debian and ubuntu
+#   ansible.builtin.apt:
+#     name: "{{ item }}"
+#     state: present
+#   loop: "{{ packages }}"
+#   when: ansible_os_family == "Debian" or ansible_os_family == "Ubuntu"
+#   become: true
 
-- name: Install dependencies for fedora
-  ansible.builtin.dnf:
-    name: "{{ item }}"
-    state: present
-  loop: "{{ packages }}"
-  when: ansible_os_family == "RedHat"
-  become: True
+# - name: Install dependencies for fedora
+#   ansible.builtin.dnf:
+#     name: "{{ item }}"
+#     state: present
+#   loop: "{{ packages }}"
+#   when: ansible_os_family == "RedHat"
+#   become: true
 
-## Configuring services
-- name: Fail2ban configuration using template
-  ansible.builtin.template:
-    src: templates/jails.d
-    dest: /etc/fail2ban/jail.d/"{{ item | basename | regex_replace('\.j2$', '') }}"
-    owner: root
-    group: root
-    mode: 0600
-  with_fileglob:
-    - ../templates/jails.d/*.j2
-  notify:
-    - Fedora restart fail2ban
-  become: True
+# ## Configuring services
+# - name: Fail2ban configuration using template
+#   ansible.builtin.template:
+#     remote_src: true
+#     src: templates/jails.d
+#     dest: /etc/fail2ban/jail.d/"{{ item | basename | regex_replace('\.j2$', '') }}"
+#     owner: root
+#     group: root
+#     mode: 0600
+#   with_fileglob:
+#     - ../templates/jails.d/*.j2
+#   notify:
+#     - restart fail2ban
+#   become: true
 
-## Configuring sshd
-- name: Generate SSH keys for the host
-  ansible.builtin.openssh_keypair:
-    path: /etc/ssh/ssh_host_ed25519_key
-    type: ed25519
-    size: 4096
-    state: present
-  become: True
+# ## Configuring sshd
+# # - name: Generate SSH keys for the host
+# #   ansible.builtin.openssh_keypair:
+# #     path: /etc/ssh/ssh_host_ed25519_key
+# #     type: ed25519
+# #     size: 4096
+# #     state: present
+# #   become: true
 
-- name: Configure sshd
-  ansible.builtin.template:
-    src: templates/sshd_config.j2
-    dest: /etc/ssh/sshd_config.d/ansible.conf
-    owner: root
-    group: root
-    mode: 0600
-  notify:
-    - Restart sshd
-  become: True
+# - name: Configure sshd
+#   ansible.builtin.template:
+#     src: templates/sshd_config.j2
+#     dest: /etc/ssh/sshd_config.d/ansible.conf
+#     owner: root
+#     group: root
+#     mode: 0600
+#   notify:
+#     - Restart sshd
+#   become: true
 
-- name: Create admin group
-  ansible.builtin.group:
-    name: admin
-    state: present
-  become: True
+# - name: Create admin group
+#   ansible.builtin.group:
+#     name: admin
+#     state: present
+#   become: true
 
-- name: Create an administrative user
-  ansible.builtin.user:
-    append: True
-    name: louisadm
-    create_home: True
-    generate_ssh_key: True
-    ssh_key_bits: 4096
-    ssh_key_file: .ssh/id_rsa
-    update_password: on_create
-    password: "{{ user_password | password_hash('sha512') }}"
-    groups: "{{ groups }}"
-    shell: /bin/bash
-    state: present
-  become: True
+# - name: Create an administrative user
+#   ansible.builtin.user:
+#     append: true
+#     name: louisadm
+#     create_home: true
+#     generate_ssh_key: true
+#     ssh_key_bits: 4096
+#     ssh_key_file: .ssh/id_rsa
+#     update_password: on_create
+#     password: "{{ user_password | password_hash('sha512') }}"
+#     groups: "{{ groups }}"
+#     shell: /bin/bash
+#     state: present
+#   become: true
 
-- name: Allow admin group to use sudo
-  ansible.builtin.lineinfile:
-    path: /etc/sudoers.d/admin
-    line: "%admin ALL=(ALL) ALL"
-    state: present
-    create: True
-    validate: 'visudo -cf %s'
-  become: True
+# - name: Allow admin group to use sudo
+#   ansible.builtin.lineinfile:
+#     path: /etc/sudoers.d/admin
+#     line: "%admin ALL=(ALL) ALL"
+#     state: present
+#     create: true
+#     validate: 'visudo -cf %s'
+#   become: true
 
-- name: Remove root password
-  ansible.builtin.user:
-    name: root
-    password_lock: True
-  become: True
+# # - name: Remove root password
+# #   ansible.builtin.user:
+# #     name: root
+# #     password_lock: true
+# #   become: true
 
-- name: Add keys to authorized_keys
-  ansible.builtin.copy:
-    content: "{{ auhtorized_keys }}"
-    dest: /home/louisadm/.ssh/authorized_keys
-    owner: louisadm
-    group: louisadm
-    mode: 0600
-  become: True
+# - name: Add keys to authorized_keys
+#   ansible.builtin.copy:
+#     content: "{{ auhtorized_keys }}"
+#     dest: /home/louisadm/.ssh/authorized_keys
+#     owner: louisadm
+#     group: louisadm
+#     mode: 0600
+#   become: true
+
