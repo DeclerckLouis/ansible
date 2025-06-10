@@ -1,0 +1,38 @@
+- name: Install and a configure apache webserver
+  hosts: localhost
+  # Handlers can be called in later by tasks
+  handlers:
+      # all handlers must have names
+    - name: Restart Service
+      ansible.builtin.systemd:
+        name: "{{ service_name }}"
+        state: restarted
+      become: true
+  
+  tasks:
+  - name: Apt update and upgrade
+    ansible.builtin.apt:
+      update_cache: true
+      upgrade: true
+    become: true
+
+  - name: Install required packages
+    ansible.builtin.apt:
+      name:
+        - git
+        - dnsutils
+        - rsyslog
+        - fail2ban
+      state: present
+    become: true
+
+  - name: Set authorized keys taken from url using lookup
+    ansible.posix.authorized_key:
+      user: declercklouis
+      state: present
+      key: "{{ lookup('url', 'https://github.com/declercklouis.keys', split_lines=False) }}"
+    become: true
+
+# Next todo's 
+# Push fail2ban configs (sshd & recidive)
+# Push zabbix agent & zabbix agent config
